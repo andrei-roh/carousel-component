@@ -1,0 +1,24 @@
+.sliderBlock {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.slider {
+  height: 500px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.slider-img {
+  height: 500px;
+  transition: all 0.3s;
+}
+
+.sliderButton {
+  min-height: 260px;
+  min-width: 70px;
+  align-self: flex-start;
+}

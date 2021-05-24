@@ -1,11 +1,12 @@
 import React from 'react';
+import Carousel from './Carousel/Carousel';
 
-export default class App extends React.Component {
-  render() {
-    return (
-      <div>
-        <img src='images/bear.jpg' />
-      </div>
-    )
-  }
+const App = () => {
+  return (
+    <div>
+      <Carousel />
+    </div>
+  )
 };
+
+export default App;
