@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
-import slides from './defaultSlides';
 import './style.css';
 
-const Carousel = () => {
-  const slideLength = 390;
-  const slideHeight = 260;
+const Carousel = ({ slides, slideLength, slideHeight }) => {
   const carouselEdge = Math.floor(slides.length / 2);
-  const slidesPositions = [(slideLength * 2), slideLength, 0, -slideLength, (-slideLength * 2)];
+  let slidesPositions = [];
+  if (slides % 2 === 0) {
+  	for (let i = carouselEdge; i >= 0; i -= 1) {
+      slidesPositions.push(slideLength * i)
+    }
+    for (let i = 1; i < carouselEdge; i += 1) {
+      slidesPositions.push(-slideLength * i)
+    }
+  } else {
+  	for (let i = carouselEdge; i > 0; i -= 1) {
+      slidesPositions.push(slideLength * i)
+    }
+    slidesPositions.push(0)
+    for (let i = 1; i < carouselEdge + 1; i += 1) {
+      slidesPositions.push(-slideLength * i)
+    }
+  }
   const [activePosition, setActivePosition] = useState(0);
   const [activeDirection, setActiveDirection] = useState(0);
   const prevSlide = () => {
@@ -65,7 +78,7 @@ const Carousel = () => {
         return setActivePosition(-slideLength);
       };
     };
-    setActivePosition(0)
+    return setActivePosition(0)
   }
 
   return (
@@ -115,7 +128,6 @@ const Carousel = () => {
                 const sliderScreen = document.querySelector('.sliderSlide');
                 isDown = true;
                 startOnX = element.touches[0].pageX - sliderScreen.offsetLeft;
-                console.log(startOnX)
                 scrollLeft = sliderScreen.changedTouches;
               }}
               onTouchMove={(element) => {
@@ -143,6 +155,7 @@ const Carousel = () => {
               <button
                 key={slide.key}
                 className="buttonInKit"
+                style={{ opacity: `${slidesPositions[slides.indexOf(slide)] === activePosition ? 1 : 0.3}` }}
                 onClick={() => setActivePosition(slidesPositions[slides.indexOf(slide)])}
               />
           )}

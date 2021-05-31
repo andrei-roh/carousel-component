@@ -58,7 +58,7 @@
   height: 0;
   padding-left: 5px;
   border-top: 10px solid transparent;
-  border-right: 20px solid #959FB0;
+  border-right: 20px solid #FFF;
   border-bottom: 10px solid transparent;
 }
 
@@ -67,7 +67,7 @@
   height: 0;
   margin-left: 10px;
   border-top: 10px solid transparent;
-  border-left: 20px solid #959FB0;
+  border-left: 20px solid #FFF;
   border-bottom: 10px solid transparent;
 }
 
@@ -88,8 +88,5 @@
   border-radius: 50%;
   background: #FFF;
   opacity: 0.3;
-}
-
-.buttonInKit:hover {
-  opacity: 0.6;
+  border: none;
 }
