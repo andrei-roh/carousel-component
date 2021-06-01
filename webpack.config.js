@@ -34,13 +34,13 @@ module.exports = {
     tls: 'empty'
   },
   output: {
-    path: path.resolve(__dirname, '/public'),
+    path: path.resolve(__dirname, 'public/'),
     filename: 'bundle.js'
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin()
   ],
-  
+
   devServer: {
     contentBase: path.resolve(__dirname, './public'),
     publicPath: '/',
@@ -49,4 +49,3 @@ module.exports = {
     open: true,
   },
 };
-
