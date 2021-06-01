@@ -4,11 +4,11 @@ import './style.css';
 const Carousel = ({ slides, slideLength, slideHeight }) => {
   const carouselEdge = Math.floor(slides.length / 2);
   let slidesPositions = [];
-  if (slides % 2 === 0) {
-  	for (let i = carouselEdge; i >= 0; i -= 1) {
+  if (slides.length % 2 === 0) {
+  	for (let i = carouselEdge - 1; i >= 1; i -= 1) {
       slidesPositions.push(slideLength * i)
     }
-    for (let i = 1; i < carouselEdge; i += 1) {
+    for (let i = 0; i < carouselEdge + 1; i += 1) {
       slidesPositions.push(-slideLength * i)
     }
   } else {
@@ -20,10 +20,17 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
       slidesPositions.push(-slideLength * i)
     }
   }
+
   const [activePosition, setActivePosition] = useState(0);
   const [activeDirection, setActiveDirection] = useState(0);
   const prevSlide = () => {
     setActivePosition(current => {
+      if (slides.length % 2 === 0) {
+        return (
+          (current / slideLength) === (carouselEdge - 1))
+            ? current = (-slideLength * carouselEdge)
+            : current + slideLength;
+      }
       return (
         (current / slideLength) === carouselEdge)
           ? current = (-slideLength * carouselEdge)
@@ -32,6 +39,12 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
   };
   const nextSlide = () => {
     setActivePosition(current => {
+      if (slides.length % 2 === 0) {
+        return (
+          (current / slideLength) === (-carouselEdge))
+            ? current = (slideLength * (carouselEdge - 1))
+            : current - slideLength;
+      }
       return (
         (current / slideLength) === (-carouselEdge))
           ? current = (slideLength * carouselEdge)
@@ -46,14 +59,21 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
 
   const setOnUpChangeSlide = () => {
     isDown = false;
-    if (activePosition > slideLength) {
+    if (activePosition > slideLength * carouselEdge) {
       if (activeDirection > 0) {
-        return setActivePosition(slideLength * 2);
+        return setActivePosition(-slideLength * carouselEdge);
       };
-      if (activeDirection < 0) {
-        return setActivePosition(slideLength);
+    }
+    for (let i = 1; i < (slides.length % 2 === 0 ? carouselEdge - 1 : carouselEdge); i += 1) {
+      if (activePosition > slideLength * i && activePosition < slideLength * (i + 1)) {
+        if (activeDirection > 0) {
+          return setActivePosition(slideLength * (i + 1));
+        };
+        if (activeDirection < 0) {
+          return setActivePosition(slideLength * i);
+        };
       };
-    };
+    }
     if (activePosition >= 60 && activePosition <= slideLength) {
       if (activeDirection > 0) {
         return setActivePosition(slideLength);
@@ -70,14 +90,21 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
         return setActivePosition(0);
       };
     };
-    if (activePosition < -slideLength) {
+    for (let i = 1; i < carouselEdge; i += 1) {
+      if (activePosition < -slideLength * i && activePosition > -slideLength * (i + 1)) {
+        if (activeDirection < 0) {
+          return setActivePosition(-slideLength * (i + 1));
+        };
+        if (activeDirection > 0) {
+          return setActivePosition(-slideLength * i);
+        };
+      };
+    }
+    if (activePosition < -slideLength * carouselEdge) {
       if (activeDirection < 0) {
-        return setActivePosition(-slideLength * 2);
+        return setActivePosition(slideLength * (slides.length % 2 === 0 ? carouselEdge - 1 : carouselEdge));
       };
-      if (activeDirection > 0) {
-        return setActivePosition(-slideLength);
-      };
-    };
+    }
     return setActivePosition(0)
   }
 
@@ -98,7 +125,10 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
           slide =>
             <img
               className="sliderSlide"
-              style={{ left: `${activePosition}px`, height: `${slideHeight}px` }}
+              style={{
+                left: `${slides.length % 2 === 0 ? activePosition + (slideLength / 2) : activePosition}px`,
+                height: `${slideHeight}px`
+              }}
               key={slide.key}
               src={slide.src}
               onMouseDown={(element) => {
@@ -108,11 +138,7 @@ const Carousel = ({ slides, slideLength, slideHeight }) => {
                 startOnX = element.pageX - sliderScreen.offsetLeft;
                 scrollLeft = sliderScreen.scrollLeft;
               }}
-              onMouseLeave={
-                () => {
-                  isDown = false
-                }
-              }
+              onMouseLeave={() => isDown = false}
               onMouseMove={(element) => {
                 const sliderScreen = document.querySelector('.sliderSlide');
                 if(!isDown) return;

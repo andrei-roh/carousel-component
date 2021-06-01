@@ -16,6 +16,8 @@ const slides = [
   {key: slide5, src: slide5},
   {key: slide6, src: slide6},
   {key: slide7, src: slide7},
+  {key: slide8, src: slide8},
+  {key: slide9, src: slide9},
 ];
 
 export default slides;
