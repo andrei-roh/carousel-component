@@ -1,194 +1,156 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import './style.css';
 
-const Carousel = ({ slides, slideLength, slideHeight }) => {
-  const carouselEdge = Math.floor(slides.length / 2);
-  let slidesPositions = [];
-  if (slides.length % 2 === 0) {
-  	for (let i = carouselEdge - 1; i >= 1; i -= 1) {
-      slidesPositions.push(slideLength * i)
-    }
-    for (let i = 0; i < carouselEdge + 1; i += 1) {
-      slidesPositions.push(-slideLength * i)
-    }
-  } else {
-  	for (let i = carouselEdge; i > 0; i -= 1) {
-      slidesPositions.push(slideLength * i)
-    }
-    slidesPositions.push(0)
-    for (let i = 1; i < carouselEdge + 1; i += 1) {
-      slidesPositions.push(-slideLength * i)
-    }
-  }
+const Carousel = ({ children, show, infiniteLoop, indicators }) => {
+    const [currentIndex, setCurrentIndex] = useState(infiniteLoop ? show : 0);
+    const [slidesLength, setSlidesLength] = useState(children.length);
 
-  const [activePosition, setActivePosition] = useState(0);
-  const [activeDirection, setActiveDirection] = useState(0);
-  const prevSlide = () => {
-    setActivePosition(current => {
-      if (slides.length % 2 === 0) {
-        return (
-          (current / slideLength) === (carouselEdge - 1))
-            ? current = (-slideLength * carouselEdge)
-            : current + slideLength;
-      }
-      return (
-        (current / slideLength) === carouselEdge)
-          ? current = (-slideLength * carouselEdge)
-          : current + slideLength;
-    });
-  };
-  const nextSlide = () => {
-    setActivePosition(current => {
-      if (slides.length % 2 === 0) {
-        return (
-          (current / slideLength) === (-carouselEdge))
-            ? current = (slideLength * (carouselEdge - 1))
-            : current - slideLength;
-      }
-      return (
-        (current / slideLength) === (-carouselEdge))
-          ? current = (slideLength * carouselEdge)
-          : current - slideLength;
-    });
-  };
+    const [isRepeating, setIsRepeating] = useState(infiniteLoop && children.length > show);
+    const [isTransition, setIsTransition] = useState(true);
 
-  let isDown = false;
-  let startOnX;
-  let offset = 0;
-  let scrollLeft;
+    const [touchPosition, setTouchPosition] = useState(null);
+    const [paused, setPaused] = useState(true);
 
-  const setOnUpChangeSlide = () => {
-    isDown = false;
-    if (activePosition > slideLength * carouselEdge) {
-      if (activeDirection > 0) {
-        return setActivePosition(-slideLength * carouselEdge);
-      };
-    }
-    for (let i = 1; i < (slides.length % 2 === 0 ? carouselEdge - 1 : carouselEdge); i += 1) {
-      if (activePosition > slideLength * i && activePosition < slideLength * (i + 1)) {
-        if (activeDirection > 0) {
-          return setActivePosition(slideLength * (i + 1));
-        };
-        if (activeDirection < 0) {
-          return setActivePosition(slideLength * i);
-        };
-      };
-    }
-    if (activePosition >= 60 && activePosition <= slideLength) {
-      if (activeDirection > 0) {
-        return setActivePosition(slideLength);
-      };
-      if (activeDirection < 0) {
-        return setActivePosition(0);
-      };
+    const changeSlide = (direction, index) => {
+        switch (direction) {
+            case 'next':
+                if (isRepeating || currentIndex < slidesLength - show)
+                    setCurrentIndex((prevState) => prevState + 1);
+                break;
+            case 'previous':
+                if (isRepeating || currentIndex > 0) setCurrentIndex((prevState) => prevState - 1);
+                break;
+            case 'index':
+                setCurrentIndex(index + 1);
+                break;
+        }
     };
-    if (activePosition <= -60 && activePosition >= -slideLength) {
-      if (activeDirection < 0) {
-        return setActivePosition(-slideLength);
-      };
-      if (activeDirection > 0) {
-        return setActivePosition(0);
-      };
-    };
-    for (let i = 1; i < carouselEdge; i += 1) {
-      if (activePosition < -slideLength * i && activePosition > -slideLength * (i + 1)) {
-        if (activeDirection < 0) {
-          return setActivePosition(-slideLength * (i + 1));
-        };
-        if (activeDirection > 0) {
-          return setActivePosition(-slideLength * i);
-        };
-      };
-    }
-    if (activePosition < -slideLength * carouselEdge) {
-      if (activeDirection < 0) {
-        return setActivePosition(slideLength * (slides.length % 2 === 0 ? carouselEdge - 1 : carouselEdge));
-      };
-    }
-    return setActivePosition(0)
-  }
 
-  return (
-    <div className="sliderBlock">
-      <div
-        className="sliderScreen"
-        style={{ width: `${slideLength}px`}}
-      >
-        <button
-          className="sliderButton sliderButtonLeft"
-          style={{ minHeight: `${slideHeight}px`}}
-          onClick={prevSlide}
-        >
-          <div className="previousIcon" />
-        </button>
-        {slides.map(
-          slide =>
-            <img
-              className="sliderSlide"
-              style={{
-                left: `${slides.length % 2 === 0 ? activePosition + (slideLength / 2) : activePosition}px`,
-                height: `${slideHeight}px`
-              }}
-              key={slide.key}
-              src={slide.src}
-              onMouseDown={(element) => {
-                element.preventDefault();
-                const sliderScreen = document.querySelector('.sliderSlide');
-                isDown = true;
-                startOnX = element.pageX - sliderScreen.offsetLeft;
-                scrollLeft = sliderScreen.scrollLeft;
-              }}
-              onMouseLeave={() => isDown = false}
-              onMouseMove={(element) => {
-                const sliderScreen = document.querySelector('.sliderSlide');
-                if(!isDown) return;
-                element.preventDefault();
-                const x = element.pageX - sliderScreen.offsetLeft;
-                offset = (x - startOnX) * 2;
-                sliderScreen.scrollLeft = scrollLeft - offset;
-                offset > 0 ? setActiveDirection(1) : setActiveDirection(-1);
-                setActivePosition(activePosition + (offset * 30))
-              }}
-              onMouseUp={setOnUpChangeSlide}
-              onTouchStart={(element) => {
-                const sliderScreen = document.querySelector('.sliderSlide');
-                isDown = true;
-                startOnX = element.touches[0].pageX - sliderScreen.offsetLeft;
-                scrollLeft = sliderScreen.changedTouches;
-              }}
-              onTouchMove={(element) => {
-                const sliderScreen = document.querySelector('.sliderSlide');
-                if(!isDown) return;
-                const x = element.touches[0].pageX - sliderScreen.offsetLeft;
-                offset = (x - startOnX);
-                sliderScreen.changedTouches = scrollLeft - offset;
-                offset > 0 ? setActiveDirection(1) : setActiveDirection(-1);
-                setActivePosition(activePosition + (offset * 30))
-              }}
-              onTouchEnd={setOnUpChangeSlide}
-            />
-        )}
-        <button
-          className="sliderButton sliderButtonRight"
-          style={{ minHeight: `${slideHeight}px`}}
-          onClick={nextSlide}
-        >
-          <div className="nextIcon" />
-        </button>
-        <div className="buttonsKit">
-          {slides.map(
-            slide =>
-              <button
-                key={slide.key}
-                className="buttonInKit"
-                style={{ opacity: `${slidesPositions[slides.indexOf(slide)] === activePosition ? 1 : 0.3}` }}
-                onClick={() => setActivePosition(slidesPositions[slides.indexOf(slide)])}
-              />
-          )}
+    const handleTouchStart = (e) => {
+        const touchDown = e.touches[0].clientX;
+        setTouchPosition(touchDown);
+    };
+
+    const handleTouchMove = (e) => {
+        const touchDown = touchPosition;
+
+        if (!touchDown) return;
+
+        const currentTouch = e.touches[0].clientX;
+        const difference = touchDown - currentTouch;
+
+        if (difference > 5) changeSlide('next');
+        if (difference < -5) changeSlide('previous');
+
+        setTouchPosition(null);
+    };
+
+    const handleTransitionEnd = () => {
+        if (isRepeating) {
+            if (!currentIndex) {
+                setIsTransition(false);
+                setCurrentIndex(slidesLength);
+            } else if (currentIndex === slidesLength + show) {
+                setIsTransition(false);
+                setCurrentIndex(show);
+            }
+        }
+    };
+
+    const renderExtraPrev = () => {
+        let output = [];
+        for (let index = 0; index < show; index++) {
+            output.push(children[slidesLength - 1 - index]);
+        }
+        output.reverse();
+        return output;
+    };
+
+    const renderExtraNext = () => {
+        let output = [];
+        for (let index = 0; index < show; index++) {
+            output.push(children[index]);
+        }
+        return output;
+    };
+
+    useEffect(() => {
+        setSlidesLength(children.length);
+        setIsRepeating(infiniteLoop && children.length > show);
+    }, [children, infiniteLoop, show]);
+
+    useEffect(() => {
+        if (isRepeating && (currentIndex === show || currentIndex === slidesLength))
+            setIsTransition(true);
+    }, [currentIndex, isRepeating, show, slidesLength]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (!paused) changeSlide('next');
+        }, 2000);
+
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+        };
+    });
+
+    return (
+        <div className="carousel-container">
+            <div className="carousel-wrapper">
+                <button className="left-arrow" onClick={() => changeSlide('previous')}>
+                    {(isRepeating || currentIndex > 0) && <img src="icons/right-arrow.svg" />}
+                </button>
+
+                <div
+                    className="carousel-content-wrapper"
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}>
+                    <div
+                        className={`carousel-content show-${show}`}
+                        style={{
+                            transform: `translateX(-${(currentIndex * 100) / show}%)`,
+                            transition: !isTransition ? 'none' : undefined
+                        }}
+                        onTransitionEnd={() => handleTransitionEnd()}>
+                        {slidesLength > show && isRepeating && renderExtraPrev()}
+                        {children}
+                        {slidesLength > show && isRepeating && renderExtraNext()}
+                    </div>
+                </div>
+
+                <button className="right-arrow" onClick={() => changeSlide('next')}>
+                    {(isRepeating || currentIndex < slidesLength - show) && (
+                        <img src="icons/right-arrow.svg" />
+                    )}
+                </button>
+            </div>
+            {indicators && (
+                <div className="indicators">
+                    {children.map((child, index) => {
+                        return (
+                            <button
+                                className={`${index === currentIndex - 1 ? 'active' : ''}
+                            `}
+                                key={`${child}-${index}`}
+                                onClick={() => changeSlide('index', index)}>
+                                {index + 1}
+                            </button>
+                        );
+                    })}
+                    <button className="play-pause" onClick={() => setPaused(!paused)}>
+                        <img src={paused ? 'icons/play.svg' : 'icons/pause.svg'} />
+                    </button>
+                </div>
+            )}
         </div>
-      </div>
-    </div>
-  )
-}
+    );
+};
+
+Carousel.propTypes = {
+    children: PropTypes.any
+};
 
 export default Carousel;
